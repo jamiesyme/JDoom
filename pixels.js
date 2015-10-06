@@ -1,58 +1,50 @@
 
-//
-// Create the pixel data.
-//
+Pixels = {};
 
-var windowDiv = document.getElementById('window');
+// Store the screen sizes.
 
-var windowWidth  = 300;
-var windowHeight = 200;
+Pixels.width  = 300;
+Pixels.height = 200;
 
-var pixelDivs = new Array(windowWidth * windowHeight);
-var pixels    = new Array(windowWidth * windowHeight);
+// Store the canvas data.
 
-for (var y = 0; y < windowHeight; y++) {
-	for (var x = 0; x < windowWidth; x++) {
-		var pixelDiv = document.createElement('div');
-		pixelDiv.className = 'pixel';
-		windowDiv.appendChild(pixelDiv);
-		pixelDivs[y * windowWidth + x] = pixelDiv;
-		pixels[   y * windowWidth + x] = [0, 0, 0];
-	}
-	windowDiv.appendChild(document.createElement('br'));
-}
+Pixels.canvas            = document.getElementsByTagName('canvas')[0];
+Pixels.ctx               = Pixels.canvas.getContext('2d', {alpha: false});
+Pixels.ctx.canvas.width  = Pixels.width;
+Pixels.ctx.canvas.height = Pixels.height;
 
-//
+// Store the pixel data.
+
+Pixels.pixels = Pixels.ctx.createImageData(Pixels.width, Pixels.height);
+
 // Expose pixel access through an API.
-//
 
-function getWindowWidth() {
-	return windowWidth;
-}
+Pixels.set = function (x, y, color) {
+	var i = (y * this.width + x) * 4;
+	this.pixels.data[i + 0] = color[0] * 255;
+	this.pixels.data[i + 1] = color[1] * 255;
+	this.pixels.data[i + 2] = color[2] * 255;
+	this.pixels.data[i + 3] = 255;
+};
 
-function getWindowHeight() {
-	return windowHeight;
-}
+Pixels.get = function (x, y) {
+	var i = (y * this.width + x) * 3;
+	return [
+		this.pixels.data[i + 0] / 255,
+		this.pixels.data[i + 1] / 255,
+		this.pixels.data[i + 2] / 255
+	];
+};
 
-function setPixel(x, y, color) {
+Pixels.draw = function () {
+	this.ctx.putImageData(this.pixels, 0, 0);
+};
 
-	function compToHex(c) {
-		var hex = c.toString(16);
-		return hex.length == 1 ? "0" + hex : hex;
+
+// Initialize the pixel data
+
+for (var y = 0; y < Pixels.height; y++) {
+	for (var x = 0; x < Pixels.width; x++) {
+		Pixels.set(x, y, [1, 1, 1]);
 	}
-	
-	var hex = '#' + compToHex(color[0] * 255) +
-	                compToHex(color[1] * 255) +
-	                compToHex(color[2] * 255);
-	
-	pixelDivs[y * windowWidth + x].style.backgroundColor = hex;
-	
-	pixels[y * windowWidth + x][0] = color[0];
-	pixels[y * windowWidth + x][1] = color[1];
-	pixels[y * windowWidth + x][2] = color[2];
 }
-
-function getPixel(x, y) {
-	return pixels[y * windowWidth + x];
-}
-
