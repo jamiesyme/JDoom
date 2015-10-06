@@ -56,10 +56,3 @@ function getPixel(x, y) {
 	return pixels[y * windowWidth + x];
 }
 
-//
-// Test the API.
-//
-
-setPixel(10, 10, [1.0, 0.2, 0.2]);
-console.log( getPixel(10, 9) );
-console.log( getPixel(10, 10) );
