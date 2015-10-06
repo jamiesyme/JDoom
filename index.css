@@ -1,0 +1,11 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+.pixel {
+	width:   2px;
+	height:  2px;
+	display: inline-block;
+	background-color: #000;
+}
