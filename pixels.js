@@ -48,3 +48,4 @@ for (var y = 0; y < Pixels.height; y++) {
 		Pixels.set(x, y, [1, 1, 1]);
 	}
 }
+
