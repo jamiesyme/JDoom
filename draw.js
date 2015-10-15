@@ -32,7 +32,46 @@ Draw.clear = function() {
 //		y:    0  // Intersection y
 //	};
 //
-Draw.testLineAABB = function(ray, aabb) {
+Draw.testRayAABB = function(ray, aabb) {
+	
+	//
+	// Given tx1, tx2, ty1, ty2, return the intercept or null.
+	//
+	function getIntercept(tx1, tx2, ty1, ty2) {
+		// Calculate the max t
+		// This will be used to "throw out" values
+		// ie. if t > tMax, it's considered invalid
+		var tMax  = Math.max(tx1, tx2, ty1, ty2);
+		
+		// Check tx1 bounds
+		if (ray.y + ray.dy * tx1 < aabb.y ||
+			  ray.y + ray.dy * tx1 > aabb.y + aabb.h)
+			tx1 = tMax + 1;
+	
+		// Check tx2 bounds
+		if (ray.y + ray.dy * tx2 < aabb.y ||
+			  ray.y + ray.dy * tx2 > aabb.y + aabb.h)
+			tx2 = tMax + 1;
+			
+		// Check ty1 bounds
+		if (ray.x + ray.dx * ty1 < aabb.x ||
+			  ray.x + ray.dx * ty1 > aabb.x + aabb.w)
+			ty1 = tMax + 1;
+	
+		// Check ty2 bounds
+		if (ray.x + ray.dx * ty2 < aabb.x ||
+			  ray.x + ray.dx * ty2 > aabb.x + aabb.w)
+			ty2 = tMax + 1;
+			
+		// Return the closest hit (if exists)
+		var tHit = Math.min(tx1, tx2, ty1, ty2);
+		if (tHit > tMax)
+			return null;
+		return {
+			x: ray.x + ray.dx * tHit,
+			y: ray.y + ray.dy * tHit
+		};
+	}
 	
 	// Handle vertical line
 	if (ray.dx === 0 && Math.abs(ray.dy) === 1) {
@@ -42,23 +81,11 @@ Draw.testLineAABB = function(ray, aabb) {
 			return null;
 			
 		// Calculate y intercepts
-		var tyMin = (aabb.y - ray.y) / ray.dy;
-		var tyMax = (aabb.y + aabb.h - ray.y) / ray.dy;
-		if (tyMin < 0 && tyMax < 0)
-			return null;
-			
-		// Return the best intercept
-		if (tyMin < tyMax || tyMax < 0) {
-			return {
-				x: ray.x + ray.dx * tyMin,
-				y: ray.y + ray.dy * tyMin
-			};
-		} else {
-			return {
-				x: ray.x + ray.dx * tyMax,
-				y: ray.y + ray.dy * tyMax
-			};
-		}
+		var ty1 = (aabb.y - ray.y) / ray.dy;
+		var ty2 = (aabb.y + aabb.h - ray.y) / ray.dy;
+		
+		// Find the hit
+		return getIntercept(-1, -1, ty1, ty2);
 	}
 	
 	// Handle horizontal line
@@ -69,33 +96,22 @@ Draw.testLineAABB = function(ray, aabb) {
 			return null;
 			
 		// Calculate x intercepts
-		var txMin = (aabb.x - ray.x) / ray.dx;
-		var txMax = (aabb.x + aabb.w - ray.x) / ray.dx;
-		if (txMin < 0 && txMax < 0)
-			return null;
-			
-		// Return the best intercept
-		if (txMin < txMax || txMax < 0) {
-			return {
-				x: ray.x + ray.dx * txMin,
-				y: ray.y + ray.dy * txMin
-			};
-		} else {
-			return {
-				x: ray.x + ray.dx * txMax,
-				y: ray.y + ray.dy * txMax
-			};
-		}
+		var tx1 = (aabb.x - ray.x) / ray.dx;
+		var tx2 = (aabb.x + aabb.w - ray.x) / ray.dx;
+		
+		// Find the hit
+		return getIntercept(tx1, tx2, -1, -1);
 	}
 	
 	// Handle every other line
 	// Calculate intercepts
-	var txMin = (aabb.x - ray.x) / ray.dx;
-	var txMax = (aabb.x + aabb.w - ray.x) / ray.dx;
-	var tyMin = (aabb.y - ray.y) / ray.dy;
-	var tyMax = (aabb.y + aabb.h - ray.y) / ray.dy;
+	var tx1 = (aabb.x - ray.x) / ray.dx;
+	var tx2 = (aabb.x + aabb.w - ray.x) / ray.dx;
+	var ty1 = (aabb.y - ray.y) / ray.dy;
+	var ty2 = (aabb.y + aabb.h - ray.y) / ray.dy;
 	
-	// 
+	// Find the hit
+	return getIntercept(tx1, tx2, ty1, ty2);
 };
 
 // Render the world to the screen.
@@ -111,12 +127,47 @@ Draw.render = function() {
 	var hFov = vFov * Pixels.width / Pixels.height;
 	for (var x = 0; x < Pixels.width; x++) {
 	
-		// Calculate the ray
-		var rayAngle = (x - Pixels.width / 2) / (Pixels.width - 1) * hFov / 2.0;
-		var rayDirX  = Math.cos(rayAngle);
-		var rayDirY  = Math.sqrt(1.0 - rayDirX);
+		// Calculate the normalized ray
+		var rayAngle = (x / (Pixels.width - 1) - 0.5) * hFov;
+		var rayDirX  = Math.sin(rayAngle);
+		var rayDirY  = Math.sqrt(1.0 - rayDirX * rayDirX);
 		
-		// 
+		// Check if the ray hit a box
+		var hit = Draw.testRayAABB(
+			{
+				x:  0, 
+				y:  0, 
+				dx: rayDirX, 
+				dy: rayDirY
+			},
+			{
+				x: 0.5,
+				y: 2,
+				w: 1,
+				h: 1
+			}
+		) || Draw.testRayAABB(
+			{
+				x:  0, 
+				y:  0, 
+				dx: rayDirX, 
+				dy: rayDirY
+			},
+			{
+				x: -1.5,
+				y: 2,
+				w: 1,
+				h: 1
+			}
+		);
+		if (hit != null) {
+			var dist   = Math.sqrt(hit.x * hit.x + hit.y * hit.y);
+			var height = Math.min(1 / dist * Pixels.height, Pixels.height);
+			var y1     = Pixels.height / 2 - height / 2;
+			var y2     = Pixels.height / 2 + height / 2;
+			for (var y = y1; y < y2; y++)
+				Pixels.set(x, Math.floor(y), [0, 0, 0]);
+		}
 	}
 	
 	// Update the pixels
