@@ -1,23 +1,32 @@
 
 Pixels = {};
 
-// Store the screen sizes.
+// Store the screen size.
 
-Pixels.width  = 300;
-Pixels.height = 200;
+Pixels.width = 0;
+Pixels.height = 0;
 
 // Store the canvas data.
 
-Pixels.canvas            = document.getElementsByTagName('canvas')[0];
-Pixels.ctx               = Pixels.canvas.getContext('2d', {alpha: false});
-Pixels.ctx.canvas.width  = Pixels.width;
-Pixels.ctx.canvas.height = Pixels.height;
+Pixels.canvas = document.getElementsByTagName('canvas')[0];
+Pixels.ctx    = Pixels.canvas.getContext('2d', {alpha: false});
 
 // Store the pixel data.
 
-Pixels.pixels = Pixels.ctx.createImageData(Pixels.width, Pixels.height);
+Pixels.pixels = null;
 
 // Expose pixel access through an API.
+
+Pixels.setSize = function(w, h) {
+	this.width = w;
+	this.height = h;
+	this.ctx.canvas.width = w;
+	this.ctx.canvas.height = h;
+	this.pixels = this.ctx.createImageData(w, h);
+	for (var y = 0; y < h; y++)
+		for (var x = 0; x < w; x++)
+			this.set(x, y, [1, 1, 1]);
+};
 
 Pixels.set = function (x, y, color) {
 	var i = (y * this.width + x) * 4;
@@ -40,12 +49,7 @@ Pixels.draw = function () {
 	this.ctx.putImageData(this.pixels, 0, 0);
 };
 
+// Initialize the pixel data.
 
-// Initialize the pixel data
-
-for (var y = 0; y < Pixels.height; y++) {
-	for (var x = 0; x < Pixels.width; x++) {
-		Pixels.set(x, y, [1, 1, 1]);
-	}
-}
+Pixels.setSize(300, 200);
 

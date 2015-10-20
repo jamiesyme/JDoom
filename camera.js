@@ -34,6 +34,11 @@ Camera.getHorizontalFov = function() {
 	return this.hFovRad / degToRad;
 };
 
+Camera.setPosition = function(x, y) {
+	this.posX = x;
+	this.posY = y;
+};
+
 Camera.setRotation = function(deg) {
 	this.rotRad = deg * degToRad;
 };
