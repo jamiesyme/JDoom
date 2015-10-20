@@ -44,14 +44,16 @@ var initialMapData = [
 ' ###   ### ',
 '           '];
 
-Map.setSize(initialMapData[0].length, initialMapData.length);
+Map.setSize(initialMapData[0].length + 2, initialMapData.length + 2);
 
 for (var y = 0; y < Map.height; y++) {
 	for (var x = 0; x < Map.width; x++) {
-		if (initialMapData[y][x] === ' ')
-			Map.set(x, y, null);
+		if (x === 0 || x === Map.width - 1 ||
+		    y === 0 || y === Map.height - 1 ||
+		    initialMapData[y - 1][x - 1] === ' ')
+		  Map.set(x, y, {});
 		else
-			Map.set(x, y, {});
+			Map.set(x, y, null);
 	}
 }
 
