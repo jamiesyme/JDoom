@@ -4,9 +4,12 @@ var Draw = {};
 // Clear the screen.
 
 Draw.clear = function() {
-	for (var y = Pixels.height / 2; y < Pixels.height; y++)
-		for (var x = 0; x < Pixels.width; x++)
+	for (var x = 0; x < Pixels.width; x++) {
+		for (var y = 0; y < Pixels.height / 2; y++)
+			Pixels.set(x, y, [1.0, 1.0, 1.0]);
+		for (var y = Pixels.height / 2; y < Pixels.width; y++)
 			Pixels.set(x, y, [0.9, 0.9, 0.9]);
+	}
 };
 
 // Test ray-vs-box.
@@ -42,6 +45,12 @@ Draw.testRayAABB = function(ray, aabb) {
 		// This will be used to "throw out" values
 		// ie. if t > tMax, it's considered invalid
 		var tMax  = Math.max(tx1, tx2, ty1, ty2);
+		
+		// Throw out negative values (those hits are behind us)
+		if (tx1 < 0) tx1 = tMax + 1;
+		if (tx2 < 0) tx2 = tMax + 1;
+		if (ty1 < 0) ty1 = tMax + 1;
+		if (ty2 < 0) ty2 = tMax + 1;
 		
 		// Check tx1 bounds
 		if (ray.y + ray.dy * tx1 < aabb.y ||
@@ -116,27 +125,42 @@ Draw.testRayAABB = function(ray, aabb) {
 
 // Render the world to the screen.
 
-Draw.render = function() {
+Draw.render = function(camera) {
+
+	// TEMP: set the camera
+	camera = camera || Camera;
 	
 	// Clear the screen first
 	Draw.clear();
 	
 	// Render the world
-	var degToRad = 3.141592654 / 180.0;
-	var vFov = 90.0 * degToRad;
-	var hFov = vFov * Pixels.width / Pixels.height;
+	var posX     = camera.posX;
+	var posY     = camera.posY;
+	var rot      = camera.rotRad;
+	var vFov     = camera.vFovRad;
+	var hFov     = camera.hFovRad;
+	var tanVFov  = Math.tan(vFov / 2);
+	var adjacent = (Pixels.width / 2) / Math.tan(hFov / 2);
+	
 	for (var x = 0; x < Pixels.width; x++) {
 	
+		// Calculate opposite value
+		var opposite = (x - Pixels.width / 2) + 0.5;
+		
+		// Calculate the ray angle(s)
+		var rayAngleOffset = Math.atan(opposite / adjacent);
+	
 		// Calculate the normalized ray
-		var rayAngle = (x / (Pixels.width - 1) - 0.5) * hFov;
+		//var rayAngleRaw = (x / (Pixels.width - 1) - 0.5) * hFov;
+		var rayAngle = rayAngleOffset + rot;
 		var rayDirX  = Math.sin(rayAngle);
-		var rayDirY  = Math.sqrt(1.0 - rayDirX * rayDirX);
+		var rayDirY  = Math.cos(rayAngle);
 		
 		// Check if the ray hit a box
 		var hit = Draw.testRayAABB(
 			{
-				x:  0, 
-				y:  0, 
+				x:  posX, 
+				y:  posY, 
 				dx: rayDirX, 
 				dy: rayDirY
 			},
@@ -148,23 +172,32 @@ Draw.render = function() {
 			}
 		) || Draw.testRayAABB(
 			{
-				x:  0, 
-				y:  0, 
+				x:  posX, 
+				y:  posY, 
 				dx: rayDirX, 
 				dy: rayDirY
 			},
 			{
-				x: -1.5,
-				y: 2,
-				w: 1,
+				x: -2.5,
+				y: 1,
+				w: 2,
 				h: 1
 			}
 		);
 		if (hit != null) {
-			var dist   = Math.sqrt(hit.x * hit.x + hit.y * hit.y);
-			var height = Math.min(1 / dist * Pixels.height, Pixels.height);
-			var y1     = Pixels.height / 2 - height / 2;
-			var y2     = Pixels.height / 2 + height / 2;
+			// Distance = dist between hit & cam * Math.cos(rayAngle)
+			var diffX = (hit.x - posX);
+			var diffY = (hit.y - posY);
+			var dist   = Math.sqrt(diffX * diffX + diffY * diffY) * Math.cos(rayAngleOffset);
+			
+			// BlockHeight      = 2.0
+			// NormalizedHeight = (BlockHeight / 2) / (tan * distance)
+			// DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
+			var height = (Pixels.height / 2) / (tanVFov * dist);
+			
+			// Draw the pixel line
+			var y1 = Pixels.height / 2 - height / 2;
+			var y2 = Pixels.height / 2 + height / 2;
 			for (var y = y1; y < y2; y++)
 				Pixels.set(x, Math.floor(y), [0, 0, 0]);
 		}
@@ -175,6 +208,6 @@ Draw.render = function() {
 };
 
 
-// TEMP: Render the world once
-Draw.render();
+// TEMP: Render the world 60 times per second
+setInterval(Draw.render, 16);
 
