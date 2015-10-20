@@ -126,9 +126,6 @@ Draw.testRayAABB = function(ray, aabb) {
 // Render the world to the screen.
 
 Draw.render = function(camera) {
-
-	// TEMP: set the camera
-	camera = camera || Camera;
 	
 	// Clear the screen first
 	Draw.clear();
@@ -206,8 +203,4 @@ Draw.render = function(camera) {
 	// Update the pixels
 	Pixels.draw();
 };
-
-
-// TEMP: Render the world 60 times per second
-setInterval(Draw.render, 16);
 
