@@ -153,10 +153,6 @@ Draw.render = function(camera, map) {
 		// Shoot the ray through the map
 		while (true) {
 			
-			// Try and move the ray off of any integer boundaries 
-			ray.x += ray.dx * e;
-			ray.y += ray.dy * e;
-			
 			// Make sure we are within the map
 			if (ray.x <= 0.0 && ray.dx < 0.0 ||
 			    ray.y <= 0.0 && ray.dy < 0.0 ||
@@ -169,22 +165,23 @@ Draw.render = function(camera, map) {
 			if (ray.dx > 0)
 				tx = (Math.floor(ray.x + 1.0) - ray.x) / ray.dx;
 			else 
-			if (ray.dx < 0)
+			if (ray.dx < 0) {
 				tx = (Math.floor(ray.x) - ray.x) / ray.dx;
+				if (tx === 0.0)
+					tx = -1.0 / ray.dx;
+			}
 			if (ray.dy > 0)
 				ty = (Math.floor(ray.y + 1.0) - ray.y) / ray.dy;
 			else 
-			if (ray.dy < 0)
+			if (ray.dy < 0) {
 				ty = (Math.floor(ray.y) - ray.y) / ray.dy;
+				if (ty === 0.0)
+					ty = -1.0 / ray.dy;
+			}
 			
 			var tBest = null;
 			if (tx >= 0.0 && ty >= 0.0) {
 				tBest = (tx < ty ? tx : ty);
-				//if (tx < ty) {
-				//	tBest = tx;
-				//} else {
-				//	tBest = ty;
-				//}
 			} else if (tx >= 0.0) {
 				tBest = tx;
 			} else if (ty >= 0.0) {
@@ -203,18 +200,26 @@ Draw.render = function(camera, map) {
 			// If it's empty, we can keep moving
 			if ( !map.get(tileX, tileY) )
 				continue;
-			
-			// Calculate color based on face normal
-			var color = [0.5, 0.5, 0.5];
+				
+			// Calculate the hit normal
+			var normal = {x: 0.0, y: 0.0};
 			if (tx === tBest) {
-				//color = [1, 0, 0];
-				if (ray.dx < 0.0) color = [0, 1, 0];
-				if (ray.dx > 0.0) color = [0, 0, 0];
+				if (ray.dx < 0.0) normal.x =  1.0;
+				if (ray.dx > 0.0) normal.x = -1.0;
 			} else {
-				//color = [0, 0, 1];
-				if (ray.dy < 0.0) color = [1, 0, 0];
-				if (ray.dy > 0.0) color = [0, 0, 1];
+				if (ray.dy < 0.0) normal.y =  1.0;
+				if (ray.dy > 0.0) normal.y = -1.0;
 			}
+			
+			// Calculate the lighting dot product
+			var lighting = (-normal.x * ray.dx) + (-normal.y * ray.dy);
+			
+			// Calculate color based on lighting dot product
+			var color = [
+				0.25 + lighting * 0.5, 
+				0.25 + lighting * 0.5, 
+				0.25 + lighting * 0.5
+			];
 			
 			
 			// We hit! Calculate the distance between the hit and the camera
