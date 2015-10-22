@@ -134,6 +134,7 @@ Draw.render = function(camera, map) {
 	var e        = 0.001;
 	var tanVFov  = Math.tan(camera.vFovRad / 2);
 	var adjacent = (Pixels.width / 2) / Math.tan(camera.hFovRad / 2);
+	var leather  = Images.get('leather');
 	
 	// Shoot rays for every x-axis pixel
 	for (var x = 0; x < Pixels.width; x++) {
@@ -233,6 +234,21 @@ Draw.render = function(camera, map) {
 				0.25 + lighting * 0.5
 			];
 			
+			// Calculate the texture coords
+			var texX = 0;
+			var texCoordX = 0.0;
+			if (normal.x > 0.0) {
+				texCoordX = (ray.y - Math.floor(ray.y));
+			} else if (normal.x < 0.0) {
+				texCoordX = (Math.floor(ray.y) + 1.0 - ray.y);
+			} else if (normal.y > 0.0) {
+				texCoordX = (ray.x - Math.floor(ray.x));
+			} else if (normal.y < 0.0) {
+				texCoordX = (Math.floor(ray.x) + 1.0 - ray.x);
+			}
+			texCoordX = Math.max(0.0, Math.min(texCoordX, 1.0));
+			texX = Math.min(leather.width - 1, Math.floor(texCoordX * leather.width));
+			
 			// We hit! Calculate the distance between the hit and the camera
 			var diffX = (ray.x - camera.posX);
 			var diffY = (ray.y - camera.posY);
@@ -243,16 +259,16 @@ Draw.render = function(camera, map) {
 			// : NormalizedHeight = (BlockHeight / 2) / (tan * distance)
 			// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
 			var height = (Pixels.height / 2) / (tanVFov * dist);
-			var height = Math.min(height, Pixels.height);
+			var cHeight = Math.min(height, Pixels.height);
 			
 			// Draw the pixel line
-			var y1 = Pixels.height / 2 - height / 2;
-			var y2 = Pixels.height / 2 + height / 2;
-			for (var y = y1; y < y2; y++)
-				Pixels.set(x, Math.floor(y), color);
-				
-			if (Keyboard.isKeyDown('p'))
-				console.log('Wall hit: (', tile.x, ',', tile.y, ')');
+			var y1 = Math.floor(Pixels.height / 2 - cHeight / 2);
+			var y2 = Math.floor(Pixels.height / 2 + cHeight / 2);
+			for (var y = y1; y < y2; y++) {
+				var texCoordY = (y - y1) / (y2 - y1);
+				var texY = Math.min(leather.height - 1, Math.floor(texCoordY * leather.height));
+				Pixels.set(x, y, leather.get(texX, texY));
+			}
 				
 			// We're done here
 			break;
