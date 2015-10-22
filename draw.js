@@ -259,13 +259,16 @@ Draw.render = function(camera, map) {
 			// : NormalizedHeight = (BlockHeight / 2) / (tan * distance)
 			// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
 			var height = (Pixels.height / 2) / (tanVFov * dist);
-			var cHeight = Math.min(height, Pixels.height);
+			
+			// Calculate Ys
+			var y1 = Math.floor(Pixels.height / 2 - height / 2);
+			var y2 = Math.floor(Pixels.height / 2 + height / 2);
+			var cy1 = Math.max(y1, 0);
+			var cy2 = Math.min(y2, Pixels.height);
 			
 			// Draw the pixel line
-			var y1 = Math.floor(Pixels.height / 2 - cHeight / 2);
-			var y2 = Math.floor(Pixels.height / 2 + cHeight / 2);
-			for (var y = y1; y < y2; y++) {
-				var texCoordY = (y - y1) / (y2 - y1);
+			for (var y = cy1; y < cy2; y++) {
+				var texCoordY = (y - y1) / height;
 				var texY = Math.min(leather.height - 1, Math.floor(texCoordY * leather.height));
 				Pixels.set(x, y, leather.get(texX, texY));
 			}
