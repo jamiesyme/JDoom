@@ -31,7 +31,7 @@ Map.get = function(x, y) {
 
 // Load the intial map data
 
-var initialMapData = [
+/*var initialMapData = [
 '           ',
 ' ###   ### ',
 '         # ',
@@ -42,6 +42,19 @@ var initialMapData = [
 '   #   #   ',
 ' ###   ### ',
 ' ###   ### ',
+'           '];*/
+
+var initialMapData = [
+'           ',
+'           ',
+'           ',
+'           ',
+'      #    ',
+'           ',
+'           ',
+'           ',
+'           ',
+'           ',
 '           '];
 
 Map.setSize(initialMapData[0].length + 2, initialMapData.length + 2);
@@ -51,9 +64,9 @@ for (var y = 0; y < Map.height; y++) {
 		if (x === 0 || x === Map.width - 1 ||
 		    y === 0 || y === Map.height - 1 ||
 		    initialMapData[y - 1][x - 1] === ' ')
-		  Map.set(x, y, {});
+		  Map.set(x, y, null);
 		else
-			Map.set(x, y, null);
+			Map.set(x, y, {});
 	}
 }
 

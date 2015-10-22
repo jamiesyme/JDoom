@@ -22,9 +22,12 @@ Camera.setFov(60.0, Pixels.width / Pixels.height);
 // Configure the main loop.
 
 var mainLoop = function() {
+
+	// Update our objects
+	Ticker.tick();
 	
 	// Render the frame
-	Draw.render( Camera );
+	Draw.render( Camera, Map );
 	
 	// Keep the loop going
 	requestAnimFrame(mainLoop);
@@ -32,5 +35,5 @@ var mainLoop = function() {
 
 
 // Start the loop.
-
+//Draw.render( Camera, Map );
 requestAnimFrame(mainLoop);

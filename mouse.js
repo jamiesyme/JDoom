@@ -12,9 +12,9 @@ Mouse.addMoveListener = function(cb) {
 };
 
 
-document.addEventListener('mousemove', function(e) {
-	for (var i = 0; i < Mouse.listeners.length; i++)
-		Mouse.listeners[i](e.clientX - Mouse.x, e.clientY - Mouse.y);
-	Mouse.x = e.clientX;
-	Mouse.y = e.clientY;
-});
+document.addEventListener('mousemove', (function(e) {
+	for (var i = 0; i < this.listeners.length; i++)
+		this.listeners[i](e.clientX - this.x, e.clientY - this.y);
+	this.x = e.clientX;
+	this.y = e.clientY;
+}).bind(Mouse));

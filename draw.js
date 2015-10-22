@@ -125,55 +125,136 @@ Draw.testRayAABB = function(ray, aabb) {
 
 // Render the world to the screen.
 
-Draw.render = function(camera) {
+Draw.render = function(camera, map) {
 	
 	// Clear the screen first
 	Draw.clear();
 	
-	// Render the world
-	var posX     = camera.posX;
-	var posY     = camera.posY;
-	var rot      = camera.rotRad;
-	var vFov     = camera.vFovRad;
-	var hFov     = camera.hFovRad;
-	var tanVFov  = Math.tan(vFov / 2);
-	var adjacent = (Pixels.width / 2) / Math.tan(hFov / 2);
+	// Prepare rendering variables
+	var e        = 0.001;
+	var tanVFov  = Math.tan(camera.vFovRad / 2);
+	var adjacent = (Pixels.width / 2) / Math.tan(camera.hFovRad / 2);
 	
+	// Shoot rays for every x-axis pixel
 	for (var x = 0; x < Pixels.width; x++) {
 	
 		// Calculate opposite value
 		var opposite = (x - Pixels.width / 2) + 0.5;
 		
-		// Calculate the ray angle(s)
-		var rayAngleOffset = Math.atan(opposite / adjacent);
-	
-		// Calculate the normalized ray
-		//var rayAngleRaw = (x / (Pixels.width - 1) - 0.5) * hFov;
-		var rayAngle = rayAngleOffset + rot;
-		var rayDirX  = Math.sin(rayAngle);
-		var rayDirY  = Math.cos(rayAngle);
+		// Calculate the ray
+		var ray = {};
+		ray.angleOffset = Math.atan(opposite / adjacent);
+		ray.angle       = ray.angleOffset + camera.rotRad;
+		ray.dx          = Math.sin(ray.angle);
+		ray.dy          = Math.cos(ray.angle);
+		ray.x           = camera.posX;
+		ray.y           = camera.posY;
 		
-		// Check if the ray hit a box
-		var hit = Draw.testRayAABB(
-			{
-				x:  posX, 
-				y:  posY, 
-				dx: rayDirX, 
-				dy: rayDirY
-			},
+		// Shoot the ray through the map
+		while (true) {
+			
+			// Try and move the ray off of any integer boundaries 
+			ray.x += ray.dx * e;
+			ray.y += ray.dy * e;
+			
+			// Make sure we are within the map
+			if (ray.x <= 0.0 && ray.dx < 0.0 ||
+			    ray.y <= 0.0 && ray.dy < 0.0 ||
+			    ray.x >= map.width  && ray.dx > 0.0 ||
+			    ray.y >= map.height && ray.dy > 0.0)
+			  break;
+			
+			// Calculate distance to next integer boundary
+			var tx = -1.0, ty = -1.0;
+			if (ray.dx > 0)
+				tx = (Math.floor(ray.x + 1.0) - ray.x) / ray.dx;
+			else 
+			if (ray.dx < 0)
+				tx = (Math.floor(ray.x) - ray.x) / ray.dx;
+			if (ray.dy > 0)
+				ty = (Math.floor(ray.y + 1.0) - ray.y) / ray.dy;
+			else 
+			if (ray.dy < 0)
+				ty = (Math.floor(ray.y) - ray.y) / ray.dy;
+			
+			var tBest = null;
+			if (tx >= 0.0 && ty >= 0.0) {
+				tBest = (tx < ty ? tx : ty);
+				//if (tx < ty) {
+				//	tBest = tx;
+				//} else {
+				//	tBest = ty;
+				//}
+			} else if (tx >= 0.0) {
+				tBest = tx;
+			} else if (ty >= 0.0) {
+				tBest = ty;
+			}else
+				break;
+				
+			// Move the ray
+			ray.x += ray.dx * tBest;
+			ray.y += ray.dy * tBest;
+				
+			// Calculate the tile we're at
+			var tileX = Math.floor(ray.x + ray.dx * e);
+			var tileY = Math.floor(ray.y + ray.dy * e);
+			
+			// If it's empty, we can keep moving
+			if ( !map.get(tileX, tileY) )
+				continue;
+			
+			// Calculate color based on face normal
+			var color = [0.5, 0.5, 0.5];
+			if (tx === tBest) {
+				//color = [1, 0, 0];
+				if (ray.dx < 0.0) color = [0, 1, 0];
+				if (ray.dx > 0.0) color = [0, 0, 0];
+			} else {
+				//color = [0, 0, 1];
+				if (ray.dy < 0.0) color = [1, 0, 0];
+				if (ray.dy > 0.0) color = [0, 0, 1];
+			}
+			
+			
+			// We hit! Calculate the distance between the hit and the camera
+			var diffX = (ray.x - camera.posX);
+			var diffY = (ray.y - camera.posY);
+			var dist  = Math.sqrt(diffX * diffX + diffY * diffY) * Math.cos(ray.angleOffset);
+		
+			// Calculate the pixel height based on the distance
+			// : BlockHeight      = 2.0
+			// : NormalizedHeight = (BlockHeight / 2) / (tan * distance)
+			// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
+			var height = (Pixels.height / 2) / (tanVFov * dist);
+			var height = Math.min(height, Pixels.height);
+			
+			// Draw the pixel line
+			var y1 = Pixels.height / 2 - height / 2;
+			var y2 = Pixels.height / 2 + height / 2;
+			for (var y = y1; y < y2; y++)
+				Pixels.set(x, Math.floor(y), color);
+				
+			if (Keyboard.isKeyDown('p'))
+				console.log('Wall hit: (', tileX, ',', tileY, ')');
+				
+			// We're done here
+			break;
+		}
+		
+		// Reset the ray position
+		ray.x = camera.posX;
+		ray.y = camera.posY;
+		
+		// Shoot the ray at sprites
+		/*var hit = Draw.testRayAABB( ray,
 			{
 				x: 0.5,
 				y: 2,
 				w: 1,
 				h: 1
 			}
-		) || Draw.testRayAABB(
-			{
-				x:  posX, 
-				y:  posY, 
-				dx: rayDirX, 
-				dy: rayDirY
-			},
+		) || Draw.testRayAABB( ray,
 			{
 				x: -2.5,
 				y: 1,
@@ -183,13 +264,13 @@ Draw.render = function(camera) {
 		);
 		if (hit != null) {
 			// Distance = dist between hit & cam * Math.cos(rayAngle)
-			var diffX = (hit.x - posX);
-			var diffY = (hit.y - posY);
-			var dist   = Math.sqrt(diffX * diffX + diffY * diffY) * Math.cos(rayAngleOffset);
+			var diffX = (hit.x - ray.x);
+			var diffY = (hit.y - ray.y);
+			var dist   = Math.sqrt(diffX * diffX + diffY * diffY) * Math.cos(ray.angleOffset);
 			
-			// BlockHeight      = 2.0
-			// NormalizedHeight = (BlockHeight / 2) / (tan * distance)
-			// DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
+			// : BlockHeight      = 2.0
+			// : NormalizedHeight = (BlockHeight / 2) / (tan * distance)
+			// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
 			var height = (Pixels.height / 2) / (tanVFov * dist);
 			
 			// Draw the pixel line
@@ -197,7 +278,7 @@ Draw.render = function(camera) {
 			var y2 = Pixels.height / 2 + height / 2;
 			for (var y = y1; y < y2; y++)
 				Pixels.set(x, Math.floor(y), [0, 0, 0]);
-		}
+		}*/
 	}
 	
 	// Update the pixels
