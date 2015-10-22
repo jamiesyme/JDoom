@@ -48,7 +48,7 @@ Camera.getRotation = function() {
 };
 
 // Set the intial FOVs
-Camera.setFov(60.0, 800.0 / 600.0);
+Camera.setFov(60.0, Pixels.width / Pixels.height);
 
 
 

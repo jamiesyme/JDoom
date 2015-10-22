@@ -13,7 +13,7 @@ var requestAnimFrame =
 
 
 // Configure the settings.
-Pixels.setSize(300, 200);
+Pixels.setSize(400, 300);
 Camera.setPosition(1.5, 1.5);
 Camera.setRotation(-30.0);
 Camera.setFov(60.0, Pixels.width / Pixels.height);
@@ -35,5 +35,4 @@ var mainLoop = function() {
 
 
 // Start the loop.
-//Draw.render( Camera, Map );
 requestAnimFrame(mainLoop);

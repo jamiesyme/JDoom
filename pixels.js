@@ -20,8 +20,8 @@ Pixels.pixels = null;
 Pixels.setSize = function(w, h) {
 	this.width = w;
 	this.height = h;
-	this.ctx.canvas.width = w;
-	this.ctx.canvas.height = h;
+	this.canvas.width = w;
+	this.canvas.height = h;
 	this.pixels = this.ctx.createImageData(w, h);
 	for (var y = 0; y < h; y++)
 		for (var x = 0; x < w; x++)
@@ -48,8 +48,4 @@ Pixels.get = function (x, y) {
 Pixels.draw = function () {
 	this.ctx.putImageData(this.pixels, 0, 0);
 };
-
-// Initialize the pixel data.
-
-Pixels.setSize(300, 200);
 
