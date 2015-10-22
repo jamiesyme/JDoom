@@ -192,15 +192,7 @@ Draw.render = function(camera, map) {
 			// Move the ray
 			ray.x += ray.dx * tBest;
 			ray.y += ray.dy * tBest;
-				
-			// Calculate the tile we're at
-			var tileX = Math.floor(ray.x + ray.dx * e);
-			var tileY = Math.floor(ray.y + ray.dy * e);
 			
-			// If it's empty, we can keep moving
-			if ( !map.get(tileX, tileY) )
-				continue;
-				
 			// Calculate the hit normal
 			var normal = {x: 0.0, y: 0.0};
 			if (tx === tBest) {
@@ -211,6 +203,26 @@ Draw.render = function(camera, map) {
 				if (ray.dy > 0.0) normal.y = -1.0;
 			}
 			
+			// Calculate the tile we're at
+			var tile = {};
+			if (normal.x > 0.0) {
+				tile.x = Math.round(ray.x) - 1.0;
+				tile.y = Math.floor(ray.y);
+			} else if (normal.x < 0.0) {
+				tile.x = Math.round(ray.x);
+				tile.y = Math.floor(ray.y);
+			} else if (normal.y > 0.0) {
+				tile.x = Math.floor(ray.x);
+				tile.y = Math.round(ray.y) - 1.0;
+			} else if (normal.y < 0.0) {
+				tile.x = Math.floor(ray.x);
+				tile.y = Math.round(ray.y);
+			}
+			
+			// If it's empty, we can keep moving
+			if ( !map.get(tile.x, tile.y) )
+				continue;
+			
 			// Calculate the lighting dot product
 			var lighting = (-normal.x * ray.dx) + (-normal.y * ray.dy);
 			
@@ -220,7 +232,6 @@ Draw.render = function(camera, map) {
 				0.25 + lighting * 0.5, 
 				0.25 + lighting * 0.5
 			];
-			
 			
 			// We hit! Calculate the distance between the hit and the camera
 			var diffX = (ray.x - camera.posX);
@@ -241,7 +252,7 @@ Draw.render = function(camera, map) {
 				Pixels.set(x, Math.floor(y), color);
 				
 			if (Keyboard.isKeyDown('p'))
-				console.log('Wall hit: (', tileX, ',', tileY, ')');
+				console.log('Wall hit: (', tile.x, ',', tile.y, ')');
 				
 			// We're done here
 			break;
