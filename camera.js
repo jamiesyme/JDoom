@@ -54,18 +54,12 @@ Camera.setFov(60.0, 800.0 / 600.0);
 
 // TEMP
 
-Mouse.addMoveListener( (function(dx, dy) {
-
-	this.rotRad += dx * degToRad;
-	//this.posY   -= dy / 20.0;
-	
-}).bind(Camera) );
-
 Ticker.add( function(dt) {
-	
-	if (Keyboard.isKeyDown('l')) {
-		console.log('Camera pos: (', this.posX, ',', this.posY, ')');
-	}
+
+	if (Keyboard.isKeyDown('left'))
+		Camera.rotRad -= 3.141592654 * dt;
+	if (Keyboard.isKeyDown('right'))
+		Camera.rotRad += 3.141592654 * dt;
 	
 	var m = {x: 0.0, y: 0.0};
 	if (Keyboard.isKeyDown('w')) m.y += 1.0;
@@ -82,16 +76,10 @@ Ticker.add( function(dt) {
 	m = {
 		x: m.x * Math.cos(this.rotRad) + m.y * Math.sin(this.rotRad),
 		y: m.y * Math.cos(this.rotRad) - m.x * Math.sin(this.rotRad)
-		//x: ,// - m.y * Math.sin(this.rotRad),
-		//y: //m.x * Math.sin(this.rotRad) + m.y * Math.cos(this.rotRad)
 	};
-	
-	//console.log('Movement before: ', {x: this.posX, y: this.posY});
 	
 	this.posX += m.x * 5.0 * dt;
 	this.posY += m.y * 5.0 * dt;
-	
-	//console.log('Movement after: ', {x: this.posX, y: this.posY});
 	
 }, Camera );
 

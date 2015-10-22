@@ -31,7 +31,7 @@ Map.get = function(x, y) {
 
 // Load the intial map data
 
-/*var initialMapData = [
+var initialMapData = [
 '           ',
 ' ###   ### ',
 '         # ',
@@ -42,19 +42,6 @@ Map.get = function(x, y) {
 '   #   #   ',
 ' ###   ### ',
 ' ###   ### ',
-'           '];*/
-
-var initialMapData = [
-'           ',
-'           ',
-'           ',
-'           ',
-'      #    ',
-'           ',
-'           ',
-'           ',
-'           ',
-'           ',
 '           '];
 
 Map.setSize(initialMapData[0].length + 2, initialMapData.length + 2);
