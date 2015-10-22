@@ -42,7 +42,7 @@ Images.load = function(imgName, imgPath) {
 		Images.ctx.drawImage(this, 0, 0, img.width, img.height);
 		img.data = Images.ctx.getImageData(0, 0, img.width, img.height);
 	};
-	imgObj.src = imgName + '.png';
+	imgObj.src = imgPath;
 	
 	// Return the image
 	return imgObj;
