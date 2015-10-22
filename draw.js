@@ -134,7 +134,6 @@ Draw.render = function(camera, map) {
 	var e        = 0.001;
 	var tanVFov  = Math.tan(camera.vFovRad / 2);
 	var adjacent = (Pixels.width / 2) / Math.tan(camera.hFovRad / 2);
-	var leather  = Images.get('leather');
 	
 	// Shoot rays for every x-axis pixel
 	for (var x = 0; x < Pixels.width; x++) {
@@ -221,33 +220,23 @@ Draw.render = function(camera, map) {
 			}
 			
 			// If it's empty, we can keep moving
-			if ( !map.get(tile.x, tile.y) )
+			var tileHit = map.get(tile.x, tile.y); 
+			if (!tileHit)
 				continue;
 			
 			// Calculate the lighting dot product
 			var lighting = (-normal.x * ray.dx) + (-normal.y * ray.dy);
 			
-			// Calculate color based on lighting dot product
-			var color = [
-				0.25 + lighting * 0.5, 
-				0.25 + lighting * 0.5, 
-				0.25 + lighting * 0.5
-			];
-			
 			// Calculate the texture coords
 			var texX = 0;
 			var texCoordX = 0.0;
-			if (normal.x > 0.0) {
-				texCoordX = (ray.y - Math.floor(ray.y));
-			} else if (normal.x < 0.0) {
-				texCoordX = (Math.floor(ray.y) + 1.0 - ray.y);
-			} else if (normal.y > 0.0) {
-				texCoordX = (ray.x - Math.floor(ray.x));
-			} else if (normal.y < 0.0) {
-				texCoordX = (Math.floor(ray.x) + 1.0 - ray.x);
-			}
+			if      (normal.x > 0.0) texCoordX = (ray.y - Math.floor(ray.y));
+			else if (normal.x < 0.0) texCoordX = (Math.floor(ray.y) + 1.0 - ray.y);
+			else if (normal.y > 0.0) texCoordX = (ray.x - Math.floor(ray.x));
+			else if (normal.y < 0.0) texCoordX = (Math.floor(ray.x) + 1.0 - ray.x);
 			texCoordX = Math.max(0.0, Math.min(texCoordX, 1.0));
-			texX = Math.min(leather.width - 1, Math.floor(texCoordX * leather.width));
+			texX = Math.floor(texCoordX * tileHit.texture.width);
+			texX = Math.min(tileHit.texture.width - 1, texX);
 			
 			// We hit! Calculate the distance between the hit and the camera
 			var diffX = (ray.x - camera.posX);
@@ -267,10 +256,17 @@ Draw.render = function(camera, map) {
 			var cy2 = Math.min(y2, Pixels.height);
 			
 			// Draw the pixel line
+			var texCoordY, texY, texColor;
+			var color = [];
 			for (var y = cy1; y < cy2; y++) {
-				var texCoordY = (y - y1) / height;
-				var texY = Math.min(leather.height - 1, Math.floor(texCoordY * leather.height));
-				Pixels.set(x, y, leather.get(texX, texY));
+				texCoordY = (y - y1) / height;
+				texY = Math.floor(texCoordY * tileHit.texture.height);
+				texY = Math.min(tileHit.texture.height - 1, texY);
+				texColor = tileHit.texture.get(texX, texY);
+				color[0] = texColor[0] * (lighting * 0.5 + 0.5);
+				color[1] = texColor[1] * (lighting * 0.5 + 0.5);
+				color[2] = texColor[2] * (lighting * 0.5 + 0.5);
+				Pixels.set(x, y, color);
 			}
 				
 			// We're done here

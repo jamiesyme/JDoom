@@ -22,7 +22,38 @@ Camera.setFov(60.0, Pixels.width / Pixels.height);
 
 // Load images.
 
-Images.load('leatherImg', 'leather');
+Images.load('stone', 'stone.png');
+
+
+// Load the intial map data
+
+var initialMapData = [
+'           ',
+' ###   ### ',
+'         # ',
+' ###   # # ',
+' #       # ',
+'           ',
+'           ',
+'   #   #   ',
+' ###   ### ',
+' ###   ### ',
+'           '];
+
+Map.setSize(initialMapData[0].length + 2, initialMapData.length + 2);
+
+for (var y = 0; y < Map.height; y++) {
+	for (var x = 0; x < Map.width; x++) {
+		if (x === 0 || x === Map.width - 1 ||
+		    y === 0 || y === Map.height - 1 ||
+		    initialMapData[y - 1][x - 1] === ' ')
+		  Map.set(x, y, null);
+		else
+			Map.set(x, y, {
+				texture: Images.get('stone')
+			});
+	}
+}
 
 
 // Configure the main loop.
