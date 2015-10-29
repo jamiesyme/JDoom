@@ -150,132 +150,64 @@ Draw.render = function(camera, map) {
 		ray.x           = camera.posX;
 		ray.y           = camera.posY;
 		
-		// Shoot the ray through the map
-		while (true) {
+		// Shoot the ray
+		var hit = Raycaster.shootRay(ray, map);
+		if (!hit)
+			continue;
 			
-			// Make sure we are within the map
-			if (ray.x <= 0.0 && ray.dx < 0.0 ||
-			    ray.y <= 0.0 && ray.dy < 0.0 ||
-			    ray.x >= map.width  && ray.dx > 0.0 ||
-			    ray.y >= map.height && ray.dy > 0.0)
-			  break;
-			
-			// Calculate distance to next integer boundary
-			var tx = -1.0, ty = -1.0;
-			if (ray.dx > 0)
-				tx = (Math.floor(ray.x + 1.0) - ray.x) / ray.dx;
-			else 
-			if (ray.dx < 0) {
-				tx = (Math.floor(ray.x) - ray.x) / ray.dx;
-				if (tx === 0.0)
-					tx = -1.0 / ray.dx;
-			}
-			if (ray.dy > 0)
-				ty = (Math.floor(ray.y + 1.0) - ray.y) / ray.dy;
-			else 
-			if (ray.dy < 0) {
-				ty = (Math.floor(ray.y) - ray.y) / ray.dy;
-				if (ty === 0.0)
-					ty = -1.0 / ray.dy;
-			}
-			
-			var tBest = null;
-			if (tx >= 0.0 && ty >= 0.0) {
-				tBest = (tx < ty ? tx : ty);
-			} else if (tx >= 0.0) {
-				tBest = tx;
-			} else if (ty >= 0.0) {
-				tBest = ty;
-			}else
-				break;
-				
-			// Move the ray
-			ray.x += ray.dx * tBest;
-			ray.y += ray.dy * tBest;
-			
-			// Calculate the hit normal
-			var normal = {x: 0.0, y: 0.0};
-			if (tx === tBest) {
-				if (ray.dx < 0.0) normal.x =  1.0;
-				if (ray.dx > 0.0) normal.x = -1.0;
-			} else {
-				if (ray.dy < 0.0) normal.y =  1.0;
-				if (ray.dy > 0.0) normal.y = -1.0;
-			}
-			
-			// Calculate the tile we're at
-			var tile = {};
-			if (normal.x > 0.0) {
-				tile.x = Math.round(ray.x) - 1.0;
-				tile.y = Math.floor(ray.y);
-			} else if (normal.x < 0.0) {
-				tile.x = Math.round(ray.x);
-				tile.y = Math.floor(ray.y);
-			} else if (normal.y > 0.0) {
-				tile.x = Math.floor(ray.x);
-				tile.y = Math.round(ray.y) - 1.0;
-			} else if (normal.y < 0.0) {
-				tile.x = Math.floor(ray.x);
-				tile.y = Math.round(ray.y);
-			}
-			
-			// If it's empty, we can keep moving
-			var tileHit = map.get(tile.x, tile.y); 
-			if (!tileHit)
-				continue;
-			
-			// Calculate the lighting dot product
-			var lighting = (-normal.x * ray.dx) + (-normal.y * ray.dy);
-			
-			// Calculate the texture coords
-			var texX = 0;
-			var texCoordX = 0.0;
-			if      (normal.x > 0.0) texCoordX = (ray.y - Math.floor(ray.y));
-			else if (normal.x < 0.0) texCoordX = (Math.floor(ray.y) + 1.0 - ray.y);
-			else if (normal.y > 0.0) texCoordX = (ray.x - Math.floor(ray.x));
-			else if (normal.y < 0.0) texCoordX = (Math.floor(ray.x) + 1.0 - ray.x);
-			texCoordX = Math.max(0.0, Math.min(texCoordX, 1.0));
-			texX = Math.floor(texCoordX * tileHit.texture.width);
-			texX = Math.min(tileHit.texture.width - 1, texX);
-			
-			// We hit! Calculate the distance between the hit and the camera
-			var diffX = (ray.x - camera.posX);
-			var diffY = (ray.y - camera.posY);
-			var dist  = Math.sqrt(diffX * diffX + diffY * diffY) * Math.cos(ray.angleOffset);
+		// Calculate the lighting dot product
+		var lighting = (-hit.normal.x * ray.dx) + (-hit.normal.y * ray.dy);
 		
-			// Calculate the pixel height based on the distance
-			// : BlockHeight      = 2.0
-			// : NormalizedHeight = (BlockHeight / 2) / (tan * distance)
-			// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
-			var height = (Pixels.height / 2) / (tanVFov * dist);
+		// Calculate the texture coords
+		var texX = 0;
+		var texCoordX = 0.0;
+		if (hit.normal.x > 0.0)
+			texCoordX = (hit.point.y - Math.floor(hit.point.y));
 			
-			// Calculate Ys
-			var y1 = Math.floor(Pixels.height / 2 - height / 2);
-			var y2 = Math.floor(Pixels.height / 2 + height / 2);
-			var cy1 = Math.max(y1, 0);
-			var cy2 = Math.min(y2, Pixels.height);
+		else if (hit.normal.x < 0.0) 
+			texCoordX = (Math.floor(hit.point.y) + 1.0 - hit.point.y);
 			
-			// Draw the pixel line
-			var texCoordY, texY, texColor;
-			var color = [];
-			for (var y = cy1; y < cy2; y++) {
-				texCoordY = (y - y1) / height;
-				texY = Math.floor(texCoordY * tileHit.texture.height);
-				texY = Math.min(tileHit.texture.height - 1, texY);
-				texColor = tileHit.texture.get(texX, texY);
-				color[0] = texColor[0] * (lighting * 0.5 + 0.5);
-				color[1] = texColor[1] * (lighting * 0.5 + 0.5);
-				color[2] = texColor[2] * (lighting * 0.5 + 0.5);
-				Pixels.set(x, y, color);
-			}
-				
-			// We're done here
-			break;
+		else if (hit.normal.y > 0.0) 
+			texCoordX = (hit.point.x - Math.floor(hit.point.x));
+			
+		else if (hit.normal.y < 0.0) 
+			texCoordX = (Math.floor(hit.point.x) + 1.0 - hit.point.x);
+			
+		texCoordX = Math.max(0.0, Math.min(texCoordX, 1.0));
+		texX = Math.floor(texCoordX * hit.tile.info.texture.width);
+		texX = Math.min(hit.tile.info.texture.width - 1, texX);
+		
+		// Adjust the distance to the camera to fix the fisheye effect
+		hit.point.dist *= Math.cos(ray.angleOffset);
+	
+		// Calculate the pixel height based on the distance
+		// : BlockHeight      = 2.0
+		// : NormalizedHeight = (BlockHeight / 2) / (tan * distance)
+		// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
+		var height = (Pixels.height / 2) / (tanVFov * hit.point.dist);
+		
+		// Calculate Ys
+		var y1 = Math.floor(Pixels.height / 2 - height / 2);
+		var y2 = Math.floor(Pixels.height / 2 + height / 2);
+		var cy1 = Math.max(y1, 0);
+		var cy2 = Math.min(y2, Pixels.height);
+		
+		// Draw the pixel line
+		var texture = hit.tile.info.texture;
+		var texCoordY, texY, texColor;
+		var color = [];
+		for (var y = cy1; y < cy2; y++) {
+			texCoordY = (y - y1) / height;
+			texY = Math.min(
+				texture.height - 1,
+				Math.floor(texCoordY * texture.height)	
+			);
+			texColor = texture.get(texX, texY);
+			color[0] = texColor[0] * (lighting * 0.5 + 0.5);
+			color[1] = texColor[1] * (lighting * 0.5 + 0.5);
+			color[2] = texColor[2] * (lighting * 0.5 + 0.5);
+			Pixels.set(x, y, color);
 		}
-		
-		// Reset the ray position
-		ray.x = camera.posX;
-		ray.y = camera.posY;
 		
 		// Shoot the ray at sprites
 		/*var hit = Draw.testRayAABB( ray,
