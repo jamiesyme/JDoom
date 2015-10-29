@@ -123,6 +123,72 @@ Draw.testRayAABB = function(ray, aabb) {
 	return getIntercept(tx1, tx2, ty1, ty2);
 };
 
+//
+// Calculate pixel column.
+//
+
+Draw.calculatePixelColumn = function(hit, maxPixelHeight, tanVFov) {
+	
+	// Calculate the lighting dot product
+	var lighting = (-hit.normal.x * hit.point.dx) + (-hit.normal.y * hit.point.dy);
+	
+	// Calculate the texture coords
+	var texX = 0;
+	var texCoordX = 0.0;
+	if (hit.normal.x > 0.0)
+		texCoordX = (hit.point.y - Math.floor(hit.point.y));
+		
+	else if (hit.normal.x < 0.0) 
+		texCoordX = (Math.floor(hit.point.y) + 1.0 - hit.point.y);
+		
+	else if (hit.normal.y > 0.0) 
+		texCoordX = (hit.point.x - Math.floor(hit.point.x));
+		
+	else if (hit.normal.y < 0.0) 
+		texCoordX = (Math.floor(hit.point.x) + 1.0 - hit.point.x);
+		
+	texCoordX = Math.max(0.0, Math.min(texCoordX, 1.0));
+	texX = Math.floor(texCoordX * hit.tile.info.texture.width);
+	texX = Math.min(hit.tile.info.texture.width - 1, texX);
+
+	// Calculate the pixel height based on the distance
+	// : BlockHeight      = 2.0
+	// : NormalizedHeight = (BlockHeight / 2) / (tan * distance)
+	// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
+	var height = (maxPixelHeight / 2) / (tanVFov * hit.point.dist);
+	
+	// Calculate Ys
+	var y1 = Math.floor(maxPixelHeight / 2 - height / 2);
+	var y2 = Math.floor(maxPixelHeight  / 2 + height / 2);
+	var cy1 = Math.max(y1, 0);
+	var cy2 = Math.min(y2, maxPixelHeight);
+	
+	// Calculate the pixel line
+	var pixelColumn = {
+		y1: cy1,
+		y2: cy2,
+		pixels: []
+	};
+	var texture = hit.tile.info.texture;
+	var texCoordY, texY, texColor;
+	for (var y = cy1; y < cy2; y++) {
+		texCoordY = (y - y1) / height;
+		texY = Math.min(
+			texture.height - 1,
+			Math.floor(texCoordY * texture.height)	
+		);
+		texColor = texture.get(texX, texY);
+		pixelColumn.pixels[y - cy1] = [
+			texColor[0] * (lighting * 0.5 + 0.5),
+			texColor[1] * (lighting * 0.5 + 0.5),
+			texColor[2] * (lighting * 0.5 + 0.5)
+		];
+	}
+	
+	return pixelColumn;
+		
+};
+
 // Render the world to the screen.
 
 Draw.render = function(camera, map) {
@@ -154,59 +220,43 @@ Draw.render = function(camera, map) {
 		var hit = Raycaster.shootRay(ray, map);
 		if (!hit)
 			continue;
-			
-		// Calculate the lighting dot product
-		var lighting = (-hit.normal.x * ray.dx) + (-hit.normal.y * ray.dy);
 		
-		// Calculate the texture coords
-		var texX = 0;
-		var texCoordX = 0.0;
-		if (hit.normal.x > 0.0)
-			texCoordX = (hit.point.y - Math.floor(hit.point.y));
-			
-		else if (hit.normal.x < 0.0) 
-			texCoordX = (Math.floor(hit.point.y) + 1.0 - hit.point.y);
-			
-		else if (hit.normal.y > 0.0) 
-			texCoordX = (hit.point.x - Math.floor(hit.point.x));
-			
-		else if (hit.normal.y < 0.0) 
-			texCoordX = (Math.floor(hit.point.x) + 1.0 - hit.point.x);
-			
-		texCoordX = Math.max(0.0, Math.min(texCoordX, 1.0));
-		texX = Math.floor(texCoordX * hit.tile.info.texture.width);
-		texX = Math.min(hit.tile.info.texture.width - 1, texX);
+		// Check for a reflection
+		ray.x = hit.point.x;
+		ray.y = hit.point.y;
+		ray.dx = hit.point.dx * (1.0 - Math.abs(hit.normal.x) * 2);
+		ray.dy = hit.point.dy * (1.0 - Math.abs(hit.normal.y) * 2);
+		var hit2 = Raycaster.shootRay(ray, map);
+		if (hit2)
+			hit2.point.dist += hit.point.dist;
 		
 		// Adjust the distance to the camera to fix the fisheye effect
 		hit.point.dist *= Math.cos(ray.angleOffset);
-	
-		// Calculate the pixel height based on the distance
-		// : BlockHeight      = 2.0
-		// : NormalizedHeight = (BlockHeight / 2) / (tan * distance)
-		// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
-		var height = (Pixels.height / 2) / (tanVFov * hit.point.dist);
+		if (hit2)
+			hit2.point.dist *= Math.cos(ray.angleOffset);
+			
+		// Calculate the pixel column
+		var pc = this.calculatePixelColumn(hit, Pixels.height, tanVFov);
 		
-		// Calculate Ys
-		var y1 = Math.floor(Pixels.height / 2 - height / 2);
-		var y2 = Math.floor(Pixels.height / 2 + height / 2);
-		var cy1 = Math.max(y1, 0);
-		var cy2 = Math.min(y2, Pixels.height);
+		// Calculate the pixel column of the reflection
+		var pc2 = null;
+		if (hit2)
+			pc2 = this.calculatePixelColumn(hit2, Pixels.height, tanVFov);
 		
-		// Draw the pixel line
-		var texture = hit.tile.info.texture;
-		var texCoordY, texY, texColor;
-		var color = [];
-		for (var y = cy1; y < cy2; y++) {
-			texCoordY = (y - y1) / height;
-			texY = Math.min(
-				texture.height - 1,
-				Math.floor(texCoordY * texture.height)	
-			);
-			texColor = texture.get(texX, texY);
-			color[0] = texColor[0] * (lighting * 0.5 + 0.5);
-			color[1] = texColor[1] * (lighting * 0.5 + 0.5);
-			color[2] = texColor[2] * (lighting * 0.5 + 0.5);
-			Pixels.set(x, y, color);
+		// Render the pixel column
+		for (var y = pc.y1; y < pc.y2; y++) {
+		
+			var c1 = pc.pixels[y - pc.y1];
+			if (pc2 && y >= pc2.y1 && y < pc2.y2)
+				var c2 = pc2.pixels[y - pc2.y1];
+			else
+				var c2 = Pixels.get(x, y);
+				
+			Pixels.set(x, y, [
+				c1[0] * 0.8 + c2[0] * 0.2,
+				c1[1] * 0.8 + c2[1] * 0.2,
+				c1[2] * 0.8 + c2[2] * 0.2
+			]);
 		}
 		
 		// Shoot the ray at sprites

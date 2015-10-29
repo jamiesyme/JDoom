@@ -37,7 +37,7 @@ Pixels.set = function (x, y, color) {
 };
 
 Pixels.get = function (x, y) {
-	var i = (y * this.width + x) * 3;
+	var i = (y * this.width + x) * 4;
 	return [
 		this.pixels.data[i + 0] / 255,
 		this.pixels.data[i + 1] / 255,

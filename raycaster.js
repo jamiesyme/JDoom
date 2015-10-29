@@ -22,7 +22,7 @@ Raycaster = {};
 //
 // Returns the following structure otherwise:
 //  {
-//  	point: { x, y, dist },
+//  	point: { x, y, dx, dy, dist },
 //  	normal: { x, y },
 //  	tile: { x, y, info }
 //  }
@@ -116,6 +116,8 @@ Raycaster.shootRay = function(ray, map) {
 			point: {
 				x: ray.x,
 				y: ray.y,
+				dx: ray.dx,
+				dy: ray.dy,
 				dist: Math.sqrt(dx2 + dy2)
 			},
 			normal: {

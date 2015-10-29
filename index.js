@@ -23,6 +23,7 @@ Camera.setFov(60.0, Pixels.width / Pixels.height);
 // Load images.
 
 Images.load('stone', 'stone.png');
+Images.load('metal', 'metal.png');
 
 
 // Load the intial map data
@@ -30,7 +31,7 @@ Images.load('stone', 'stone.png');
 var initialMapData = [
 '           ',
 ' ###   ### ',
-'         # ',
+'         ! ',
 ' ###   # # ',
 ' #       # ',
 '           ',
@@ -44,14 +45,18 @@ Map.setSize(initialMapData[0].length + 2, initialMapData.length + 2);
 
 for (var y = 0; y < Map.height; y++) {
 	for (var x = 0; x < Map.width; x++) {
+	
+		var tile = null;
 		if (x === 0 || x === Map.width - 1 ||
 		    y === 0 || y === Map.height - 1 ||
 		    initialMapData[y - 1][x - 1] === ' ')
-		  Map.set(x, y, null);
-		else
-			Map.set(x, y, {
-				texture: Images.get('stone')
-			});
+		  tile = null;
+		else if (initialMapData[y - 1][x - 1] === '#')
+			tile = { texture: Images.get('stone') };
+		else if (initialMapData[y - 1][x - 1] === '!')
+			tile = { texture: Images.get('metal') };
+			
+		Map.set(x, y, tile);
 	}
 }
 
