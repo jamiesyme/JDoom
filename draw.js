@@ -216,47 +216,59 @@ Draw.render = function(camera, map) {
 		ray.x           = camera.posX;
 		ray.y           = camera.posY;
 		
+		// Set up some data
+		var hit  = null;
+		var hit2 = null;
+		var pc   = null;
+		var pc2  = null;
+		
 		// Shoot the ray
-		var hit = Raycaster.shootRay(ray, map);
+		hit = Raycaster.shootRay(ray, map);
 		if (!hit)
 			continue;
 		
 		// Check for a reflection
-		ray.x = hit.point.x;
-		ray.y = hit.point.y;
-		ray.dx = hit.point.dx * (1.0 - Math.abs(hit.normal.x) * 2);
-		ray.dy = hit.point.dy * (1.0 - Math.abs(hit.normal.y) * 2);
-		var hit2 = Raycaster.shootRay(ray, map);
-		if (hit2)
-			hit2.point.dist += hit.point.dist;
+		if (hit.tile.info.reflect > 0.0) {
+			ray.x = hit.point.x;
+			ray.y = hit.point.y;
+			ray.dx = hit.point.dx * (1.0 - Math.abs(hit.normal.x) * 2);
+			ray.dy = hit.point.dy * (1.0 - Math.abs(hit.normal.y) * 2);
+			hit2 = Raycaster.shootRay(ray, map);
+			if (hit2)
+				hit2.point.dist += hit.point.dist;
+		}
 		
-		// Adjust the distance to the camera to fix the fisheye effect
+		// Adjust the distance(s) to the camera to fix the fisheye effect
 		hit.point.dist *= Math.cos(ray.angleOffset);
 		if (hit2)
 			hit2.point.dist *= Math.cos(ray.angleOffset);
 			
-		// Calculate the pixel column
+		// Calculate the pixel columns(s)
 		var pc = this.calculatePixelColumn(hit, Pixels.height, tanVFov);
-		
-		// Calculate the pixel column of the reflection
-		var pc2 = null;
 		if (hit2)
 			pc2 = this.calculatePixelColumn(hit2, Pixels.height, tanVFov);
 		
 		// Render the pixel column
 		for (var y = pc.y1; y < pc.y2; y++) {
 		
-			var c1 = pc.pixels[y - pc.y1];
-			if (pc2 && y >= pc2.y1 && y < pc2.y2)
-				var c2 = pc2.pixels[y - pc2.y1];
-			else
-				var c2 = Pixels.get(x, y);
+			// Get the color of the hit tile
+			var col = pc.pixels[y - pc.y1];
+			
+			// Mix in a reflection
+			if (hit.tile.info.reflect > 0.0) {
 				
-			Pixels.set(x, y, [
-				c1[0] * 0.8 + c2[0] * 0.2,
-				c1[1] * 0.8 + c2[1] * 0.2,
-				c1[2] * 0.8 + c2[2] * 0.2
-			]);
+				var col2 = Pixels.get(x, y);
+				if (pc2 && (y >= pc2.y1 && y < pc2.y2))
+					col2 = pc2.pixels[y - pc2.y1];
+				
+				var r = hit.tile.info.reflect;
+				col[0] = col[0] * (1.0 - r) + col2[0] * r;
+				col[1] = col[1] * (1.0 - r) + col2[1] * r;
+				col[2] = col[2] * (1.0 - r) + col2[2] * r;
+			}
+			
+			// Draw the pixel
+			Pixels.set(x, y, col);
 		}
 		
 		// Shoot the ray at sprites

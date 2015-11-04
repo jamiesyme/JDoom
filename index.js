@@ -16,7 +16,7 @@ var requestAnimFrame =
 
 Pixels.setSize(400, 300);
 Camera.setPosition(1.5, 1.5);
-Camera.setRotation(-30.0);
+Camera.setRotation(15.0);
 Camera.setFov(60.0, Pixels.width / Pixels.height);
 
 
@@ -49,12 +49,25 @@ for (var y = 0; y < Map.height; y++) {
 		var tile = null;
 		if (x === 0 || x === Map.width - 1 ||
 		    y === 0 || y === Map.height - 1 ||
-		    initialMapData[y - 1][x - 1] === ' ')
+		    initialMapData[y - 1][x - 1] === ' ') {
+		    
 		  tile = null;
-		else if (initialMapData[y - 1][x - 1] === '#')
-			tile = { texture: Images.get('stone') };
-		else if (initialMapData[y - 1][x - 1] === '!')
-			tile = { texture: Images.get('metal') };
+		  
+		} else if (initialMapData[y - 1][x - 1] === '#') {
+		
+			tile = { 
+				texture: Images.get('stone'),
+				reflect: 0.0
+			};
+			
+		} else if (initialMapData[y - 1][x - 1] === '!') {
+			
+			tile = { 
+				texture: Images.get('metal'),
+				reflect: 0.5
+			};
+			
+		}
 			
 		Map.set(x, y, tile);
 	}
