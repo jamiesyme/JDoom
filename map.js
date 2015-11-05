@@ -22,10 +22,14 @@ Map.setSize = function(w, h) {
 };
 
 Map.set = function(x, y, obj) {
+	if (x < 0 || x >= this.width || y < 0 || y >= this.height)
+		return;
 	this.data[y * this.width + x] = obj;
 };
 
 Map.get = function(x, y) {
+	if (x < 0 || x >= this.width || y < 0 || y >= this.height)
+		return null;
 	return this.data[y * this.width + x];
 };
 
