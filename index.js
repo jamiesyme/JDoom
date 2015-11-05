@@ -26,13 +26,34 @@ Images.load('stone', 'stone.png');
 Images.load('metal', 'metal.png');
 
 
+// Create the tile info.
+
+var stoneTile = {
+	texture: Images.get('stone'),
+	reflect: 0.0,
+	transparent: 0.0
+};
+
+var metalTile = {
+	texture: Images.get('metal'),
+	reflect: 0.9,
+	transparent: 0.0
+};
+
+var transTile = {
+	texture: Images.get('metal'),
+	reflect: 0.0,
+	transparent: 0.7
+};
+
+
 // Load the intial map data
 
 var initialMapData = [
 '           ',
 ' ###   ### ',
-'         ! ',
-' ###   # # ',
+'         # ',
+' ###   ! ! ',
 ' #       # ',
 '           ',
 '           ',
@@ -46,30 +67,36 @@ Map.setSize(initialMapData[0].length + 2, initialMapData.length + 2);
 for (var y = 0; y < Map.height; y++) {
 	for (var x = 0; x < Map.width; x++) {
 	
-		var tile = null;
-		if (x === 0 || x === Map.width - 1 ||
-		    y === 0 || y === Map.height - 1 ||
-		    initialMapData[y - 1][x - 1] === ' ') {
-		    
-		  tile = null;
-		  
-		} else if (initialMapData[y - 1][x - 1] === '#') {
+		var setTile = function(tile) {
+			Map.set(x, y, tile);
+		};
 		
-			tile = { 
-				texture: Images.get('stone'),
-				reflect: 0.0
-			};
-			
-		} else if (initialMapData[y - 1][x - 1] === '!') {
-			
-			tile = { 
-				texture: Images.get('metal'),
-				reflect: 0.5
-			};
-			
+		// Surround the map with transparent tiles
+		if (x === 0 || x === Map.width - 1 || 
+		    y === 0 || y === Map.height - 1) {
+		  setTile(transTile);
+			continue;
 		}
+		
+		// Set the tile based on the intial map data
+		//   - Empty
+		// # - Stone
+		// ! - Metal
+		// $ - Transparent
+		var val = initialMapData[y - 1][x - 1];
+	
+		if (val === ' ')
+		  setTile(null);
+		  
+		else if (val === '#')
+			setTile(stoneTile);
 			
-		Map.set(x, y, tile);
+		else if (val === '!')
+			setTile(metalTile);
+			
+		else if (val === '$')
+			setTile(transTile);
+		
 	}
 }
 

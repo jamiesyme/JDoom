@@ -29,7 +29,20 @@ Pixels.setSize = function(w, h) {
 };
 
 Pixels.set = function (x, y, color) {
+
+	// Calc the index
 	var i = (y * this.width + x) * 4;
+	
+	// Handle alpha
+	if (color.length > 3) {
+		var curColor = this.get(x, y);
+		var alpha = color[3];
+		color[0] = color[0] * alpha + curColor[0] * (1.0 - alpha);
+		color[1] = color[1] * alpha + curColor[1] * (1.0 - alpha);
+		color[2] = color[2] * alpha + curColor[2] * (1.0 - alpha);
+	}
+	
+	// Set the data
 	this.pixels.data[i + 0] = color[0] * 255;
 	this.pixels.data[i + 1] = color[1] * 255;
 	this.pixels.data[i + 2] = color[2] * 255;

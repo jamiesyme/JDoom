@@ -216,16 +216,98 @@ Draw.render = function(camera, map) {
 		ray.x           = camera.posX;
 		ray.y           = camera.posY;
 		
-		// Set up some data
-		var hit  = null;
-		var hit2 = null;
-		var pc   = null;
-		var pc2  = null;
-		
 		// Shoot the ray
-		hit = Raycaster.shootRay(ray, map);
+		var hit = Raycaster.shootRay(ray, map);
 		if (!hit)
 			continue;
+			
+		// This function is to draw a single ray
+		// Does NOT handle reflections, etc.
+		var adjustDist = Math.cos(ray.angleOffset);
+		var drawHit = function(hit, alpha) {
+			
+			// If the alpha is too low, it has no effect on the final image
+			if (alpha <= 0.0)
+				return;
+			
+			// Adjust the distance to the camera to fix the fisheye effect
+			hit.point.dist *= adjustDist;
+			
+			// Calculate the pixel columns(s)
+			var pc = Draw.calculatePixelColumn(hit, Pixels.height, tanVFov);
+			
+			// Render the pixel column
+			for (var y = pc.y1; y < pc.y2; y++) {
+		
+				// Get the color of the hit tile
+				var col = pc.pixels[y - pc.y1];
+				
+				// Set the alpha
+				col[3] = alpha;
+			
+				// Draw the pixel
+				Pixels.set(x, y, col);
+			}
+		};
+		
+		// Process all the hits
+		// DOES handle reflections, etc.
+		var processHit = function(hit, maxAlpha) {
+			
+			// Make sure we have a valid hit
+			if (!hit || maxAlpha <= 0.0)
+				return;
+				
+			// Save the distance (the draw function adjusts it)
+			var hitDist = hit.point.dist;
+			
+			// Draw the hit
+			var reflection   = hit.tile.info.reflect;
+			var transparency = hit.tile.info.transparent;
+			var alpha        = (1.0 - reflection - transparency) * maxAlpha;
+			drawHit( hit, alpha );
+			
+			// Handle reflections
+			if (reflection > 0.0) {
+			
+				ray.x = hit.point.x;
+				ray.y = hit.point.y;
+				ray.dx = hit.point.dx * (1.0 - Math.abs(hit.normal.x) * 2);
+				ray.dy = hit.point.dy * (1.0 - Math.abs(hit.normal.y) * 2);
+				
+				var newHit = Raycaster.shootRay(ray, map);
+				if (newHit) {
+					newHit.point.dist += hitDist;
+					processHit( newHit, reflection );
+				}
+			}
+			
+			// Handle transparency
+			if (transparency > 0.0) {
+			
+				ray.x = hit.point.x;
+				ray.y = hit.point.y;
+				ray.dx = hit.point.dx;
+				ray.dy = hit.point.dy;
+				
+				var newHit = Raycaster.shootRay(ray, map);
+				if (newHit) {
+					newHit.point.dist += hitDist;
+					processHit( newHit, transparency );
+				}
+			}
+		};
+		
+		processHit( hit, 1.0 );
+		/*
+		// Process all the hits
+		var maxDrawStrength = 1.0;
+		while (hit) {
+			
+			
+		}
+		
+		
 		
 		// Check for a reflection
 		if (hit.tile.info.reflect > 0.0) {
@@ -233,9 +315,11 @@ Draw.render = function(camera, map) {
 			ray.y = hit.point.y;
 			ray.dx = hit.point.dx * (1.0 - Math.abs(hit.normal.x) * 2);
 			ray.dy = hit.point.dy * (1.0 - Math.abs(hit.normal.y) * 2);
-			hit2 = Raycaster.shootRay(ray, map);
-			if (hit2)
-				hit2.point.dist += hit.point.dist;
+			hit = Raycaster.shootRay(ray, map);
+			if (hit) {
+				hit.point.dist += hits[0].point.dist;
+				hits.push(hit);
+			}
 		}
 		
 		// Adjust the distance(s) to the camera to fix the fisheye effect
@@ -269,7 +353,7 @@ Draw.render = function(camera, map) {
 			
 			// Draw the pixel
 			Pixels.set(x, y, col);
-		}
+		}*/
 		
 		// Shoot the ray at sprites
 		/*var hit = Draw.testRayAABB( ray,
