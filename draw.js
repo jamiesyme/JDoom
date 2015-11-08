@@ -252,7 +252,14 @@ Draw.render = function(camera, map) {
 		
 		// Process all the hits
 		// DOES handle reflections, etc.
+		var maxHits = 50;
 		var processHit = function(hit, maxAlpha) {
+			
+			// Limit the recursion
+			if (maxHits > 0)
+				maxHits--;
+			else
+				return;
 			
 			// Make sure we have a valid hit
 			if (!hit || maxAlpha <= 0.0)
@@ -299,61 +306,6 @@ Draw.render = function(camera, map) {
 		};
 		
 		processHit( hit, 1.0 );
-		/*
-		// Process all the hits
-		var maxDrawStrength = 1.0;
-		while (hit) {
-			
-			
-		}
-		
-		
-		
-		// Check for a reflection
-		if (hit.tile.info.reflect > 0.0) {
-			ray.x = hit.point.x;
-			ray.y = hit.point.y;
-			ray.dx = hit.point.dx * (1.0 - Math.abs(hit.normal.x) * 2);
-			ray.dy = hit.point.dy * (1.0 - Math.abs(hit.normal.y) * 2);
-			hit = Raycaster.shootRay(ray, map);
-			if (hit) {
-				hit.point.dist += hits[0].point.dist;
-				hits.push(hit);
-			}
-		}
-		
-		// Adjust the distance(s) to the camera to fix the fisheye effect
-		hit.point.dist *= Math.cos(ray.angleOffset);
-		if (hit2)
-			hit2.point.dist *= Math.cos(ray.angleOffset);
-			
-		// Calculate the pixel columns(s)
-		var pc = this.calculatePixelColumn(hit, Pixels.height, tanVFov);
-		if (hit2)
-			pc2 = this.calculatePixelColumn(hit2, Pixels.height, tanVFov);
-		
-		// Render the pixel column
-		for (var y = pc.y1; y < pc.y2; y++) {
-		
-			// Get the color of the hit tile
-			var col = pc.pixels[y - pc.y1];
-			
-			// Mix in a reflection
-			if (hit.tile.info.reflect > 0.0) {
-				
-				var col2 = Pixels.get(x, y);
-				if (pc2 && (y >= pc2.y1 && y < pc2.y2))
-					col2 = pc2.pixels[y - pc2.y1];
-				
-				var r = hit.tile.info.reflect;
-				col[0] = col[0] * (1.0 - r) + col2[0] * r;
-				col[1] = col[1] * (1.0 - r) + col2[1] * r;
-				col[2] = col[2] * (1.0 - r) + col2[2] * r;
-			}
-			
-			// Draw the pixel
-			Pixels.set(x, y, col);
-		}*/
 		
 		// Shoot the ray at sprites
 		/*var hit = Draw.testRayAABB( ray,
