@@ -33,21 +33,21 @@ Images.load('doomguy', 'doomguy.png');
 // Create the tile info.
 
 var stoneTile = {
-	texture: Images.get('stone'),
-	reflect: 0.0,
-	transparent: 0.0
+	texture:      Images.get('stone'),
+	reflection:   0.0,
+	translucency: 0.0
 };
 
-var metalTile = {
-	texture: Images.get('metal'),
-	reflect: 0.9,
-	transparent: 0.0
+var mirrorTile = {
+	texture:      Images.get('metal'),
+	reflection:   0.9,
+	translucency: 0.0
 };
 
 var transTile = {
-	texture: Images.get('metal'),
-	reflect: 0.0,
-	transparent: 0.7
+	texture:      Images.get('metal'),
+	reflection:   0.0,
+	translucency: 0.7
 };
 
 
@@ -79,7 +79,7 @@ for (var y = 0; y < Map.height; y++) {
 		// Surround the map with transparent tiles
 		if (x === 0 || x === Map.width - 1 || 
 		    y === 0 || y === Map.height - 1) {
-		  setTile(transTile);
+		  setTile(stoneTile);
 			continue;
 		}
 		
@@ -97,7 +97,7 @@ for (var y = 0; y < Map.height; y++) {
 			setTile(stoneTile);
 			
 		else if (val === '!')
-			setTile(metalTile);
+			setTile(mirrorTile);
 			
 		else if (val === '$')
 			setTile(transTile);

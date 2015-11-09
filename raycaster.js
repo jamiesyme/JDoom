@@ -2,7 +2,7 @@
 Raycaster = {};
 
 //
-// Shoot a ray into the map.
+// Shoot a ray into the map and return the hit faces.
 //
 //  ray: {
 //  	x: start x coord
@@ -10,39 +10,47 @@ Raycaster = {};
 //  	dx: normalized direction x
 //  	dy: normalized direction y
 //  }
-//  map: {
-//  	width: dur
-//  	height: dur
-//  	get: function(x, y)
-//  		Should return falsey if empty.
-//  		Should return tile info otherwise.
-//  }
 //
-// Returns null if it didn't hit anything.
+// Returns an empty array if it didn't hit anything.
 //
 // Returns the following structure otherwise:
-//  {
-//  	point: { x, y, dx, dy, dist },
-//  	normal: { x, y },
-//  	tile: { x, y, info }
-//  }
+//	[
+//	  {
+//		 	point:  { x, y },
+//	  	normal: { x, y },
+//			t,
+//	  	texture,
+//			height,
+//			reflection,
+//			translucency
+//	  }
+//	]
 //
 
-Raycaster.shootRay = function(ray, map) {
+Raycaster.shootRay = function(ray) {
 	
 	var start = {
 		x: ray.x,
 		y: ray.y	
 	};
+	
+	// Create a new ray (so we don't mess with the given ray
+	ray = {
+		x:  ray.x,
+		y:  ray.y,
+		dx: ray.dx,
+		dy: ray.dy
+	};
 		
 	// Search until we find the edge of the map or a tile
-	while(true) {
+	var faces = [];
+	while(faces.length < 1) {
 	
 		// Make sure we are within the map
 		if (ray.x <= 0.0 && ray.dx < 0.0 ||
 		    ray.y <= 0.0 && ray.dy < 0.0 ||
-		    ray.x >= map.width  && ray.dx > 0.0 ||
-		    ray.y >= map.height && ray.dy > 0.0)
+		    ray.x >= Map.width  && ray.dx > 0.0 ||
+		    ray.y >= Map.height && ray.dy > 0.0)
 		  break;
 		
 		// Calculate distance to next integer boundary
@@ -105,35 +113,45 @@ Raycaster.shootRay = function(ray, map) {
 		}
 		
 		// If it's empty, we can keep moving
-		tile.info = map.get(tile.x, tile.y); 
+		tile.info = Map.get(tile.x, tile.y); 
 		if (!tile.info)
 			continue;
 		
-		// We hit!
-		var dx2 = (ray.x - start.x) * (ray.x - start.x);
-		var dy2 = (ray.y - start.y) * (ray.y - start.y);
-		return {
-			point: {
-				x: ray.x,
-				y: ray.y,
-				dx: ray.dx,
-				dy: ray.dy,
-				dist: Math.sqrt(dx2 + dy2)
-			},
-			normal: {
-				x: normal.x,
-				y: normal.y
-			},
-			tile: {
-				x: tile.x,
-				y: tile.y,
-				info: tile.info
+		// Get the distance along the face
+		var dAlongFace = 0.0;
+		if      (normal.x > 0.0) dAlongFace = (ray.y - Math.floor(ray.y));
+		else if (normal.x < 0.0) dAlongFace = (Math.floor(ray.y) + 1.0 - ray.y);
+		else if (normal.y > 0.0) dAlongFace = (ray.x - Math.floor(ray.x));
+		else if (normal.y < 0.0) dAlongFace = (Math.floor(ray.x) + 1.0 - ray.x);
+		dAlongFace = Math.max(0.0, Math.min(dAlongFace, 1.0));
+		
+		// Save this face
+		faces.push(
+			{
+				point: {
+					x: ray.x,
+					y: ray.y
+				},
+				normal: {
+					x: normal.x,
+					y: normal.y
+				},
+				t:            dAlongFace,
+				texture:      tile.info.texture,
+				height:       2.0,
+				reflection:   tile.info.reflection,
+				translucency: tile.info.translucency
 			}
-		}
+		);
 	}
 	
+	
+	// Check the sprites
+	
+	
+	
 	// We didn't hit a thing	
-	return null;
+	return [];
 };
 
 
