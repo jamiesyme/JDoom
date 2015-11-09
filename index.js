@@ -12,18 +12,22 @@ var requestAnimFrame =
 	};
 
 
+
 // Configure the settings.
 
 Pixels.setSize(400, 300);
-Camera.setPosition(1.5, 1.5);
-Camera.setRotation(15.0);
+Player.setPosition(1.5, 1.5);
+Player.setRotation(15.0);
 Camera.setFov(60.0, Pixels.width / Pixels.height);
+
 
 
 // Load images.
 
 Images.load('stone', 'stone.png');
 Images.load('metal', 'metal.png');
+Images.load('doomguy', 'doomguy.png');
+
 
 
 // Create the tile info.
@@ -47,7 +51,8 @@ var transTile = {
 };
 
 
-// Load the intial map data
+
+// Load the intial map data.
 
 var initialMapData = [
 '           ',
@@ -101,12 +106,23 @@ for (var y = 0; y < Map.height; y++) {
 }
 
 
+
+// Add the player to the map as a sprite
+Player.texture: Images.get('doomguy.png');
+Map.addSprite( Player );
+
+
+
 // Configure the main loop.
 
 var mainLoop = function() {
 
 	// Update our objects
 	Ticker.tick();
+	
+	// Update the camera
+	Camera.setPosition( Player.posX, Player.posY );
+	Camera.setRotation( Player.getRotation() );
 	
 	// Render the frame
 	Draw.render( Camera, Map );

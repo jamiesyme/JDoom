@@ -9,6 +9,8 @@ Map.height = 0;
 // Store the map data
 
 Map.data = [];
+Map.sprites = [];
+
 
 // Expose map access through an API.
 
@@ -33,4 +35,11 @@ Map.get = function(x, y) {
 	return this.data[y * this.width + x];
 };
 
+Map.addSprite = function(sprite) {
+	this.sprites.push(sprite);
+};
+
+Map.getSprites = function() {
+	return this.sprites;
+};
 
