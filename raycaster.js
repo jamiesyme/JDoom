@@ -161,7 +161,7 @@ Raycaster.shootRay = function(ray, map) {
 //		y:    0  // Intersection y
 //	};
 //
-Draw.testRayAABB = function(ray, aabb) {
+Raycaster.testRayAABB = function(ray, aabb) {
 	
 	//
 	// Given tx1, tx2, ty1, ty2, return the intercept or null.

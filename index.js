@@ -108,7 +108,7 @@ for (var y = 0; y < Map.height; y++) {
 
 
 // Add the player to the map as a sprite
-Player.texture: Images.get('doomguy.png');
+Player.texture = Images.get('doomguy.png');
 Map.addSprite( Player );
 
 
