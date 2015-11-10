@@ -6,7 +6,8 @@ Player = {};
 Player.x = 0.0;
 Player.y = 0.0;
 Player.radius = 0.4;
-Player.height = 1.8;
+Player.height = 1.6;
+Player.yOff = 2.0 - Player.height;
 Player.rot = 0.0;
 
 

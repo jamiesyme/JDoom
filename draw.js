@@ -96,11 +96,12 @@ Draw._getPixelsForFace = function(o) {
 	// : NormalizedHeight = (FaceHeight / 2) / (tan * distance)
 	// : DrawHeight       = (PixelHeight / 2) * NormalizedHeight;
 	var height = (Pixels.height / 2) * (o.face.height / 2.0) / (o.tanFov * o.dist);
+	var yOff   = (Pixels.height / 2) * (o.face.yOff   / 2.0) / (o.tanFov * o.dist);
 	
 	
 	// Calculate Ys
-	var y1 = Math.floor(Pixels.height / 2 - height / 2);
-	var y2 = Math.floor(Pixels.height / 2 + height / 2);
+	var y1 = Math.floor(Pixels.height / 2 - height / 2 + yOff / 2);
+	var y2 = Math.floor(Pixels.height / 2 + height / 2 + yOff / 2);
 	var cy1 = Math.max(y1, 0);
 	var cy2 = Math.min(y2, Pixels.height);
 	

@@ -24,8 +24,9 @@ Camera.setFov(60.0, Pixels.width / Pixels.height);
 
 // Load images.
 
-Images.load('stone', 'stone.png');
-Images.load('metal', 'metal.png');
+Images.load('stone',   'stone.png');
+Images.load('wood',    'wood.jpg');
+Images.load('metal',   'metal.png');
 Images.load('doomguy', 'doomguy.png');
 
 
@@ -38,9 +39,21 @@ var stoneTile = {
 	translucency: 0.0
 };
 
-var mirrorTile = {
+var woodTile = {
+	texture:      Images.get('wood'),
+	reflection:   0.0,
+	translucency: 0.0
+};
+
+var mirror1Tile = {
 	texture:      Images.get('metal'),
 	reflection:   0.9,
+	translucency: 0.0
+};
+
+var mirror2Tile = {
+	texture:      Images.get('metal'),
+	reflection:   0.5,
 	translucency: 0.0
 };
 
@@ -56,22 +69,22 @@ var transTile = {
 
 var initialMapData = [
 '           ',
-' ###   ### ',
+' #@#   #@# ',
 '         # ',
-' ###   ! ! ',
+' #@#   ! ! ',
 ' #       # ',
 '           ',
 '           ',
 '   #   #   ',
 ' ###   ### ',
-' ###   ### ',
+' ##@   @## ',
 '           ',
-'    #  #   ',
-'   #!  !   ',
-'   #!  !   ',
-'       !   ',
-'   #!  !   ',
-'    !  #   ',
+'    @  @   ',
+'   @!  !   ',
+'   $$  ! @ ',
+'       ! # ',
+'   @!  !   ',
+'    $  @   ',
 '           '];
 
 Map.setSize(initialMapData[0].length + 2, initialMapData.length + 2);
@@ -93,8 +106,9 @@ for (var y = 0; y < Map.height; y++) {
 		// Set the tile based on the intial map data
 		//   - Empty
 		// # - Stone
-		// ! - Metal
-		// $ - Transparent
+		// ! - Mirror 1
+		// $ - Mirror 2
+		// @ - Wood
 		var val = initialMapData[y - 1][x - 1];
 	
 		if (val === ' ')
@@ -104,10 +118,13 @@ for (var y = 0; y < Map.height; y++) {
 			setTile(stoneTile);
 			
 		else if (val === '!')
-			setTile(mirrorTile);
+			setTile(mirror1Tile);
 			
 		else if (val === '$')
-			setTile(transTile);
+			setTile(mirror2Tile);
+		
+		else if (val === '@')
+			setTile(woodTile);
 		
 	}
 }

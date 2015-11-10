@@ -139,6 +139,7 @@ Raycaster.shootRay = function(ray) {
 				t:            dAlongFace,
 				texture:      tile.info.texture,
 				height:       2.0,
+				yOff:         0.0,
 				reflection:   tile.info.reflection,
 				translucency: tile.info.translucency
 			}
@@ -191,6 +192,7 @@ Raycaster.shootRay = function(ray) {
 					t:            t,
 					texture:      sprite.texture,
 					height:       sprite.height,
+					yOff:         sprite.yOff,
 					reflection:   0.0,
 					translucency: 0.0
 				}
