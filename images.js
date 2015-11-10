@@ -18,12 +18,13 @@ Images.load = function(imgName, imgPath) {
 		height: 0,
 		get: function(x, y) {
 			if (!this.data)
-				return [0, 0, 0];
+				return [0, 0, 0, 1];
 			var i = (y * this.width + x) * 4;
 			return [
 				this.data.data[i + 0] / 255,
 				this.data.data[i + 1] / 255,
-				this.data.data[i + 2] / 255
+				this.data.data[i + 2] / 255,
+				this.data.data[i + 3] / 255
 			];
 		}
 	};

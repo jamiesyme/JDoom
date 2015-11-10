@@ -178,7 +178,6 @@ Raycaster.shootRay = function(ray) {
 		if (t >= 0.0 && t <= 1.0) {
 			
 			// Save the face
-			//console.log('Hit');
 			faces.push(
 				{
 					point: {
@@ -197,38 +196,6 @@ Raycaster.shootRay = function(ray) {
 				}
 			);
 		}
-		/*var m1 = ray.dy / ray.dx;
-		var m2 = -ray.dx / ray.dy;
-		var b1 = ray.y - m1 * ray.x;
-		var b2 = sprite.y - m2 * sprite.x;
-		
-		var xInt = (b2 - b1) / (m1 - m2);
-		var yInt = m1 * xInt + b1;
-		var diffXInt = sprite.x - xInt;
-		var diffYInt = sprite.y - yInt;
-		var dist2Int = diffXInt * diffXInt + diffYInt * diffYInt;
-		if (dist2Int <= sprite.radius * sprite.radius) {
-			
-			// Save the face
-			//console.log('Hit');
-			faces.push(
-				{
-					point: {
-						x: sprite.x,//sprite.x - sprite.r * ray.dy,
-						y: sprite.y//sprite.y + sprite.r * ray.dx
-					},
-					normal: {
-						x: -ray.dx,
-						y: -ray.dy
-					},
-					t:            0.5,
-					texture:      sprite.t,
-					height:       2.0,
-					reflection:   0.0,
-					translucency: 0.0
-				}
-			);
-		}*/
 		
 	}
 	

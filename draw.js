@@ -130,7 +130,8 @@ Draw._getPixelsForFace = function(o) {
 		pixelColumn.pixels[y - cy1] = [
 			texColor[0] * (lighting * 0.5 + 0.5),
 			texColor[1] * (lighting * 0.5 + 0.5),
-			texColor[2] * (lighting * 0.5 + 0.5)
+			texColor[2] * (lighting * 0.5 + 0.5),
+			texColor[3]
 		];
 	}
 	
@@ -169,7 +170,7 @@ Draw._drawFace = function(o) {
 		var col = pc.pixels[y - pc.y1];
 		
 		// Set the alpha
-		col[3] = o.alpha;
+		col[3] *= o.alpha;
 	
 		// Draw the pixel
 		Pixels.set(o.pixelX, y, col);
