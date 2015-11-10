@@ -146,12 +146,95 @@ Raycaster.shootRay = function(ray) {
 	}
 	
 	
+	// Reset the ray position
+	ray.x = start.x;
+	ray.y = start.y;
+	
+	
 	// Check the sprites
+	for (var spriteKey in Map.sprites) {
+		
+		// Get the sprite
+		var sprite = Map.sprites[ spriteKey ];
+		
+		// Check if the ray is within the sprite
+		var diffX = sprite.x - ray.x;
+		var diffY = sprite.y - ray.y;
+		var dist2 = diffX * diffX + diffY * diffY;
+		if (dist2 < sprite.radius * sprite.radius * 0.5)
+			continue;
+		
+		// Collision testing
+		var cosRot = Math.cos( sprite.rot );
+		var sinRot = Math.sin( sprite.rot );
+		var m1 = ray.dy / ray.dx;
+		var m2 = sinRot / cosRot;
+		var b1 = ray.y - m1 * ray.x;
+		var b2 = sprite.y - m2 * sprite.x;
+		
+		var xInt = (b2 - b1) / (m1 - m2);
+		var yInt = m2 * xInt + b2;
+		var t = (xInt - sprite.x) / (2.0 * sprite.radius * cosRot) + 0.5;
+		if (t >= 0.0 && t <= 1.0) {
+			
+			// Save the face
+			//console.log('Hit');
+			faces.push(
+				{
+					point: {
+						x: xInt,
+						y: yInt
+					},
+					normal: { // TODO: Give actual normal
+						x: -ray.dx,
+						y: -ray.dy
+					},
+					t:            t,
+					texture:      sprite.texture,
+					height:       sprite.height,
+					reflection:   0.0,
+					translucency: 0.0
+				}
+			);
+		}
+		/*var m1 = ray.dy / ray.dx;
+		var m2 = -ray.dx / ray.dy;
+		var b1 = ray.y - m1 * ray.x;
+		var b2 = sprite.y - m2 * sprite.x;
+		
+		var xInt = (b2 - b1) / (m1 - m2);
+		var yInt = m1 * xInt + b1;
+		var diffXInt = sprite.x - xInt;
+		var diffYInt = sprite.y - yInt;
+		var dist2Int = diffXInt * diffXInt + diffYInt * diffYInt;
+		if (dist2Int <= sprite.radius * sprite.radius) {
+			
+			// Save the face
+			//console.log('Hit');
+			faces.push(
+				{
+					point: {
+						x: sprite.x,//sprite.x - sprite.r * ray.dy,
+						y: sprite.y//sprite.y + sprite.r * ray.dx
+					},
+					normal: {
+						x: -ray.dx,
+						y: -ray.dy
+					},
+					t:            0.5,
+					texture:      sprite.t,
+					height:       2.0,
+					reflection:   0.0,
+					translucency: 0.0
+				}
+			);
+		}*/
+		
+	}
 	
 	
-	
-	// We didn't hit a thing	
-	return [];
+	// Return our hits
+	return faces;
 };
 
 

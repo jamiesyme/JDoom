@@ -65,6 +65,13 @@ var initialMapData = [
 '   #   #   ',
 ' ###   ### ',
 ' ###   ### ',
+'           ',
+'    #  #   ',
+'   #!  !   ',
+'   #!  !   ',
+'       !   ',
+'   #!  !   ',
+'    !  #   ',
 '           '];
 
 Map.setSize(initialMapData[0].length + 2, initialMapData.length + 2);
@@ -108,7 +115,7 @@ for (var y = 0; y < Map.height; y++) {
 
 
 // Add the player to the map as a sprite
-Player.texture = Images.get('doomguy.png');
+Player.texture = Images.get('doomguy');
 Map.addSprite( Player );
 
 
@@ -121,7 +128,7 @@ var mainLoop = function() {
 	Ticker.tick();
 	
 	// Update the camera
-	Camera.setPosition( Player.posX, Player.posY );
+	Camera.setPosition( Player.x, Player.y );
 	Camera.setRotation( Player.getRotation() );
 	
 	// Render the frame
