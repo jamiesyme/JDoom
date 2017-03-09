@@ -1,12 +1,12 @@
 
 // Use requestAnimationFrame() to power the main loop.
 
-var requestAnimFrame = 
-	window.requestAnimationFrame       || 
-	window.webkitRequestAnimationFrame || 
-	window.mozRequestAnimationFrame    || 
-	window.oRequestAnimationFrame      || 
-	window.msRequestAnimationFrame     || 
+var requestAnimFrame =
+	window.requestAnimationFrame       ||
+	window.webkitRequestAnimationFrame ||
+	window.mozRequestAnimationFrame    ||
+	window.oRequestAnimationFrame      ||
+	window.msRequestAnimationFrame     ||
 	function(cb) {
 		window.setTimeout(cb, 1000 / 60);
 	};
@@ -24,10 +24,10 @@ Camera.setFov(60.0, Pixels.width / Pixels.height);
 
 // Load images.
 
-Images.load('stone',   'stone.png');
-Images.load('wood',    'wood.jpg');
-Images.load('metal',   'metal.png');
-Images.load('doomguy', 'doomguy.png');
+Images.load('doomguy', 'img/doomguy.png');
+Images.load('metal',   'img/metal.png');
+Images.load('stone',   'img/stone.png');
+Images.load('wood',    'img/wood.jpg');
 
 
 
